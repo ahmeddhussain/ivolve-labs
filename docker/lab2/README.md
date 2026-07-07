@@ -95,7 +95,7 @@ docker rm container1
 ## Notes
 - Make sure port 8080 is free before running the container.
 - If the application does not start, check the container logs using docker logs container1.
-- Make .dockerignore to not include the Dockerfile itself
+- Make .dockerignore to not include the Dockerfile itself inside the image.
 
 ---
 
@@ -188,5 +188,5 @@ docker rm container2
 ```
 
 ## Notes
-- The final image size may be smaller than the first approach because it only copies the JAR file and the build was outside of the container which is the best practicez.
+- The final image size may be smaller than the first approach because it only copies the JAR file and the build was outside of the container which is the best practice.
 - If the app does not respond, check the container logs using `docker logs container2`.
