@@ -4,5 +4,6 @@ metadata:
   name: mysql-config
   namespace: ivolve
 data:
-  DB_HOST: mysql
+  DB_HOST: mysql-ivolve
   DB_USER: ivolve
+  DB_DATABASE: ivolve
