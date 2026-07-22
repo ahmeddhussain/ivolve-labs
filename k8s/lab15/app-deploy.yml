@@ -25,7 +25,7 @@ spec:
             - sh
             - -c
             - |
-              mysql -h "$DB_HOST" -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
+              mysql -h "$DB_HOST" -u root -p"$MYSQL_ROOT_PASSWORD"  <<EOF
               CREATE DATABASE IF NOT EXISTS ivolve;
               CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
               GRANT ALL PRIVILEGES ON ivolve.* TO '$DB_USER'@'%';
