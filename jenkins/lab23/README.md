@@ -278,8 +278,8 @@ stage('Deploy') {
 ```
 
 The `@Library('jenkins-shared-lib') _` line at the top imports every function under `vars/` and makes `buildApp()`, `buildImage()`, and `deployOnK8s()` available as if they were built-in pipeline steps.
-![alt text](image-6.png)
 
+![alt text](image-9.png)
 Confirm in the build log that each stage (`BuildApp`, `BuildImage`, `DeployOnK8s`) appears with the exact names defined inside the shared library's `stage()` blocks, and that it actually ran on `agent-1` (visible in the "Running on agent-1" line at the top of the build log).
 
 ![alt text](image-7.png)
