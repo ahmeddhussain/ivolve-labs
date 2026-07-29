@@ -1,0 +1,8 @@
+- name: Configure Development Environment
+  hosts: managed_nodes
+  become: yes
+
+  roles:
+    - docker
+    - kubectl
+    - jenkins

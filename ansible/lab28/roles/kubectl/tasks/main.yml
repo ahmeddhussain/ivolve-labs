@@ -1,0 +1,13 @@
+#SPDX-License-Identifier: MIT-0
+# tasks file for roles/kubectl
+---
+- name: Download kubectl
+  get_url:
+    url: https://dl.k8s.io/release/v1.35.1/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+
+- name: Verify kubectl permissions
+  file:
+    path: /usr/local/bin/kubectl
+    mode: '0755'

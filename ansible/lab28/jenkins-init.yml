@@ -1,0 +1,113 @@
+- name: Automate Jenkins Setup 
+  hosts: managed_nodes
+  become: yes
+
+  tasks:
+    - name: Wait for Jenkins initial admin password file
+      wait_for:
+        path: /var/lib/jenkins/secrets/initialAdminPassword
+        state: present
+        timeout: 60
+
+    - name: Read Jenkins initial root password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_root_password
+      changed_when: false
+
+    - name: Display initial root admin password in terminal
+      debug:
+        msg: "The initial Jenkins root password was: {{ jenkins_root_password.stdout }}"
+
+    - name: Ensure init.groovy.d directory exists
+      file:
+        path: /var/lib/jenkins/init.groovy.d
+        state: directory
+        owner: jenkins
+        group: jenkins
+        mode: '0755'
+
+    - name: Create Groovy script to download suggested plugins & create user
+      copy:
+        dest: /var/lib/jenkins/init.groovy.d/setup-jenkins.groovy
+        owner: jenkins
+        group: jenkins
+        mode: '0644'
+        content: |
+          import jenkins.model.*
+          import hudson.security.*
+          import jenkins.install.InstallState
+
+          def instance = Jenkins.getInstance()
+
+          // 1. Create admin user 'ahmed'
+          try {
+              def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+              hudsonRealm.createAccount('ahmed', 'ahmed')
+              instance.setSecurityRealm(hudsonRealm)
+
+              def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+              instance.setAuthorizationStrategy(strategy)
+          } catch (Exception e) {
+              println("User creation failed: " + e)
+          }
+
+          // 2. Force Update Center sync & Install suggested plugins via Groovy
+          try {
+              def pm = instance.getPluginManager()
+              def uc = instance.getUpdateCenter()
+
+              // Force synchronous update center catalog fetch
+              uc.updateAllSites()
+              def site = uc.getById("default")
+              if (site != null) {
+                  site.updateDirectlyNow(false)
+              }
+
+              def plugins = [
+                  'cloudbees-folder',
+                  'build-timeout',
+                  'credentials-binding',
+                  'timestamper',
+                  'ws-cleanup',
+                  'ant',
+                  'gradle',
+                  'workflow-aggregator',
+                  'pipeline-stage-view',
+                  'git',
+                  'github',
+                  'mailer',
+                  'email-ext'
+              ]
+
+              plugins.each { pluginName ->
+                  if (!pm.getPlugin(pluginName)) {
+                      def plugin = site ? site.getPlugin(pluginName) : null
+                      if (plugin) {
+                          def deployment = plugin.deploy(true)
+                          deployment.get() // Wait for download to complete
+                      }
+                  }
+              }
+          } catch (Exception e) {
+              println("Plugin installation failed: " + e)
+          }
+
+          // 3. Mark setup wizard as complete
+          try {
+              instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
+          } catch (Exception e) {
+              println("Wizard state update failed: " + e)
+          }
+
+          instance.save()
+
+    - name: Restart Jenkins to execute Groovy script
+      service:
+        name: jenkins
+        state: restarted
+
+    - name: Wait for Jenkins port 8080 to be ready
+      wait_for:
+        port: 8080
+        delay: 5
+        timeout: 180
