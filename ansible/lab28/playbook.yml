@@ -1,6 +1,6 @@
 - name: Configure Development Environment
   hosts: managed_nodes
-  become: yes
+  become: true
 
   roles:
     - docker
