@@ -76,7 +76,10 @@ Contents:
 ---
 - name: Install Docker
   apt:
-    name: docker.io
+    name: 
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
     state: present
     update_cache: yes
 
@@ -137,19 +140,26 @@ Contents:
 ---
 - name: Install Java
   apt:
-    name: openjdk-211-jdk
+    name: openjdk-21-jdk
     state: present
     update_cache: yes
 
-- name: Download Jenkins repository key
-  shell: |
-    wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee \
-    /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Jenkins GPG key
+  get_url:
+    url: https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+    dest: /etc/apt/keyrings/jenkins-keyring.asc
+    mode: '0644'
 
 - name: Add Jenkins repository
-  shell: |
-    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee \
-    /etc/apt/sources.list.d/jenkins.list > /dev/null
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+    state: present
 
 - name: Update apt cache
   apt:
