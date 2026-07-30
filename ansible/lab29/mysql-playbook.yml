@@ -1,0 +1,41 @@
+---
+- name: Install and Configure MySQL with Vault-Protected Credentials
+  hosts: managed_nodes
+  become: yes
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    db_name: iVolve
+    db_user: ivolve_user
+
+  tasks:
+    - name: Install MySQL server
+      apt:
+        name:
+          - mysql-server
+          - python3-pymysql
+        state: present
+        update_cache: yes
+
+    - name: Ensure MySQL service is running and enabled
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create iVolve database
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create MySQL user with all privileges on iVolve DB
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_user_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        host: "%"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock

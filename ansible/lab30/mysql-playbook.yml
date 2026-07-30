@@ -1,0 +1,14 @@
+---
+- name: Install and Configure MySQL on Dynamically Discovered DB Hosts
+  hosts: tag_db
+  become: yes
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    db_name: iVolve
+    db_user: ivolve_user
+
+  roles:
+    - mysql

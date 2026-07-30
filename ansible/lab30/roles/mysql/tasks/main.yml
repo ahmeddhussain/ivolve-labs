@@ -1,0 +1,38 @@
+---
+- name: Install MySQL server
+  apt:
+    name:
+      - mysql-server
+      - python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is running and enabled
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Create iVolve database
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Create MySQL user
+  community.mysql.mysql_query:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    query: |
+      CREATE USER IF NOT EXISTS '{{ db_user }}'@'%'
+      IDENTIFIED WITH caching_sha2_password BY '{{ db_user_password }}';
+
+- name: Grant privileges
+  community.mysql.mysql_query:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    query: |
+      GRANT ALL PRIVILEGES ON {{ db_name }}.* TO '{{ db_user }}'@'%';
+
+- name: Flush privileges
+  community.mysql.mysql_query:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    query: FLUSH PRIVILEGES;
